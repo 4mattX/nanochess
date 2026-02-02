@@ -21,8 +21,8 @@ https://arxiv.org/abs/1711.05101
 def adamw_step_fused(
     p: Tensor,              # (32768, 768) - parameter tensor
     grad: Tensor,           # (32768, 768) - gradient, same shape as p
-    exp_avg: Tensor,        # (32768, 768) - first moment, same shape as p
-    exp_avg_sq: Tensor,     # (32768, 768) - second moment, same shape as p
+    exp_avg: Tensor,        # (32768, 768) - first moment, same shape as p (float32)
+    exp_avg_sq: Tensor,     # (32768, 768) - second moment, same shape as p (float32)
     step_t: Tensor,         # () - 0-D CPU tensor, step count
     lr_t: Tensor,           # () - 0-D CPU tensor, learning rate
     beta1_t: Tensor,        # () - 0-D CPU tensor, beta1
@@ -37,9 +37,11 @@ def adamw_step_fused(
     """
     # Weight decay (decoupled, applied before the update)
     p.mul_(1 - lr_t * wd_t)
-    # Update running averages (lerp_ is cleaner and fuses well)
-    exp_avg.lerp_(grad, 1 - beta1_t)
-    exp_avg_sq.lerp_(grad.square(), 1 - beta2_t)
+    # Cast grad to float32 to match state buffers (state is always float32 for numerical stability)
+    grad_f32 = grad.float()
+    # Update running averages (lerp_ works when all tensors have same dtype)
+    exp_avg.lerp_(grad_f32, 1 - beta1_t)
+    exp_avg_sq.lerp_(grad_f32.square(), 1 - beta2_t)
     # Bias corrections
     bias1 = 1 - beta1_t ** step_t
     bias2 = 1 - beta2_t ** step_t
@@ -198,11 +200,11 @@ class MuonAdamW(torch.optim.Optimizer):
             grad = p.grad
             state = self.state[p]
 
-            # State init
+            # State init (use float32 for numerical stability, regardless of param dtype)
             if not state:
                 state['step'] = 0
-                state['exp_avg'] = torch.zeros_like(p)
-                state['exp_avg_sq'] = torch.zeros_like(p)
+                state['exp_avg'] = torch.zeros_like(p, dtype=torch.float32)
+                state['exp_avg_sq'] = torch.zeros_like(p, dtype=torch.float32)
             exp_avg = state['exp_avg']
             exp_avg_sq = state['exp_avg_sq']
             state['step'] += 1
@@ -416,11 +418,11 @@ class DistMuonAdamW(torch.optim.Optimizer):
                 rank_size = p.shape[0] // world_size
                 p_slice = p[rank * rank_size:(rank + 1) * rank_size]
 
-            # State init
+            # State init (use float32 for numerical stability, regardless of param dtype)
             if not state:
                 state['step'] = 0
-                state['exp_avg'] = torch.zeros_like(p_slice)
-                state['exp_avg_sq'] = torch.zeros_like(p_slice)
+                state['exp_avg'] = torch.zeros_like(p_slice, dtype=torch.float32)
+                state['exp_avg_sq'] = torch.zeros_like(p_slice, dtype=torch.float32)
             state['step'] += 1
 
             # Fill 0-D tensors and run fused kernel

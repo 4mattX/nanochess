@@ -10,6 +10,7 @@ import torch
 
 from nanochat.common import get_base_dir
 from nanochat.gpt import GPT, GPTConfig
+from nanochat.pra import PRA, PRAConfig
 from nanochat.tokenizer import get_tokenizer
 from nanochat.common import setup_default_logging
 
@@ -166,7 +167,64 @@ def load_model(source, *args, **kwargs):
         "base": "base_checkpoints",
         "sft": "chatsft_checkpoints",
         "rl": "chatrl_checkpoints",
+        "pra": "pra_checkpoints",
     }[source]
     base_dir = get_base_dir()
     checkpoints_dir = os.path.join(base_dir, model_dir)
+    if source == "pra":
+        return load_pra_model_from_dir(checkpoints_dir, *args, **kwargs)
     return load_model_from_dir(checkpoints_dir, *args, **kwargs)
+
+
+# -----------------------------------------------------------------------------
+# PRA model support
+
+def build_pra_model(checkpoint_dir, step, device, phase):
+    """
+    Build a PRA model from a given checkpoint.
+    Returns:
+    - base model - uncompiled, not wrapped in DDP
+    - meta data saved during model training
+    """
+    assert phase in ["train", "eval"], f"Invalid phase: {phase}"
+    model_data, optimizer_data, meta_data = load_checkpoint(checkpoint_dir, step, device, load_optimizer=False)
+    if device.type in {"cpu", "mps"}:
+        # Convert bfloat16 tensors to float for CPU inference
+        model_data = {
+            k: v.float() if v.dtype == torch.bfloat16 else v
+            for k, v in model_data.items()
+        }
+    # Hack: fix torch compile issue, which prepends all keys with _orig_mod.
+    model_data = {k.removeprefix("_orig_mod."): v for k, v in model_data.items()}
+    model_config_kwargs = meta_data["model_config"]
+    log0(f"Building PRA model with config: {model_config_kwargs}")
+    model_config = PRAConfig(**model_config_kwargs)
+    with torch.device("meta"):
+        model = PRA(model_config)
+    # Load the model state
+    model.to_empty(device=device)
+    model.init_weights()
+    model.load_state_dict(model_data, strict=True, assign=True)
+    # Put the model in the right training phase / mode
+    if phase == "eval":
+        model.eval()
+    else:
+        model.train()
+    return model, meta_data
+
+
+def load_pra_model_from_dir(checkpoints_dir, device, phase, model_tag=None, step=None):
+    """Load a PRA model from the checkpoints directory."""
+    if model_tag is None:
+        # guess the model tag by defaulting to the largest model
+        model_tag = find_largest_model(checkpoints_dir)
+        log0(f"No model tag provided, guessing model tag: {model_tag}")
+    checkpoint_dir = os.path.join(checkpoints_dir, model_tag)
+    if step is None:
+        # guess the step by defaulting to the last step
+        step = find_last_step(checkpoint_dir)
+    assert step is not None, f"No checkpoints found in {checkpoint_dir}"
+    # build the model
+    log0(f"Loading PRA model from {checkpoint_dir} with step {step}")
+    model, meta_data = build_pra_model(checkpoint_dir, step, device, phase)
+    return model, meta_data

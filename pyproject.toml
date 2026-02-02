@@ -1,16 +1,18 @@
 [project]
 name = "nanochat"
 version = "0.1.0"
-description = "the minimal full-stack ChatGPT clone"
+description = "the minimal full-stack ChatGPT clone, with chess-specific models"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "chess>=1.10.0",
     "datasets>=4.0.0",
     "fastapi>=0.117.1",
     "ipykernel>=7.1.0",
     "kernels>=0.11.7",
     "matplotlib>=3.10.8",
     "psutil>=7.1.0",
+    "pyarrow>=15.0.0",
     "python-dotenv>=1.2.1",
     "regex>=2025.9.1",
     "rustbpe>=0.1.0",
