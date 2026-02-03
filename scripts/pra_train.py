@@ -145,6 +145,12 @@ if resuming:
     del model_data
 
 orig_model = model
+
+# Fix TF32 configuration for compilation (use new API consistently)
+if torch.cuda.is_available():
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
 model = torch.compile(model, dynamic=False)
 
 # Parameter counts

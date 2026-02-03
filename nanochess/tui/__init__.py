@@ -1,0 +1,1 @@
+"""Nanochess TUI components."""

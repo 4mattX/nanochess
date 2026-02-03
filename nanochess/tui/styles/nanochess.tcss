@@ -1,0 +1,1114 @@
+/* Nanochess TUI Stylesheet - Dracula Theme */
+
+/* Using Textual's built-in design tokens from the Dracula theme:
+
+   Core colors:
+   $background       - Main background (dark)
+   $surface          - Surface/panel backgrounds
+   $panel            - Panel backgrounds
+   $boost            - Boosted/emphasized elements
+
+   Accent colors (you can use these for variety!):
+   $primary          - Primary accent color
+   $secondary        - Secondary accent color
+   $accent           - Accent/highlight color
+
+   Text colors:
+   $text             - Primary text
+   $text-muted       - Muted/secondary text
+   $text-disabled    - Disabled text
+
+   Semantic colors (for status/feedback):
+   $success          - Success states (green)
+   $warning          - Warning states (yellow/orange)
+   $error            - Error states (red)
+*/
+
+/* ===== BASE STYLES ===== */
+
+Screen {
+    background: $background;
+    color: $text;
+}
+
+* {
+    scrollbar-background: $background;
+    scrollbar-color: $primary;
+    scrollbar-color-hover: $secondary;
+    scrollbar-color-active: $accent;
+    scrollbar-size-vertical: 0;
+    scrollbar-size-horizontal: 0;
+}
+
+/* ===== PANEL SYSTEM ===== */
+
+.panel {
+    background: $background;
+    border: round $primary;
+    border-title-color: $text;
+    border-title-style: bold;
+    border-title-align: center;
+    padding: 1 2;
+    margin: 0;
+}
+
+.panel:focus-within {
+    border: round $accent;
+}
+
+.panel-title {
+    color: $text;
+    text-style: bold;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+.section-title {
+    color: $accent;
+    text-style: bold;
+    margin-bottom: 1;
+    margin-top: 1;
+    padding: 0;
+}
+
+.section-title:first-child {
+    margin-top: 0;
+}
+
+.estimate-title {
+    color: $accent;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+/* ===== FOCUSABLE CONTAINERS ===== */
+
+.focusable-panel {
+    background: $background;
+    border: round $primary;
+    padding: 1;
+}
+
+.focusable-panel:focus {
+    border: round $accent;
+}
+
+.focusable-panel:focus-within {
+    border: round $accent;
+}
+
+/* ===== INPUT STYLING ===== */
+
+Input {
+    background: $background;
+    border: round $primary;
+    color: $text;
+    padding: 0 1;
+    height: 3;
+}
+
+Input:focus {
+    border: round $accent;
+    background: $background;
+}
+
+Input.-invalid {
+    border: round $error;
+}
+
+Input:hover {
+    border: round $accent;
+}
+
+/* ===== BUTTON STYLING ===== */
+
+Button {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+    padding: 0 2;
+    margin: 0 0 1 0;
+    min-width: 16;
+    text-style: bold;
+    text-overflow: ellipsis;
+}
+
+Button:hover {
+    background: $accent;
+    border: round $accent;
+    color: $background;
+}
+
+Button:focus {
+    background: $accent;
+    border: round $accent;
+    color: $background;
+    text-style: bold;
+}
+
+Button.-primary {
+    background: $secondary;
+    color: $background;
+    border: round $secondary;
+}
+
+Button.-primary:hover {
+    background: $accent;
+    border: round $accent;
+}
+
+Button.-primary:focus {
+    background: $accent;
+    border: round $accent;
+}
+
+Button.-success {
+    background: $secondary;
+    color: $background;
+    border: round $secondary;
+}
+
+Button.-success:hover {
+    background: $accent;
+}
+
+Button.-warning {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+}
+
+Button.-warning:hover {
+    background: $secondary;
+}
+
+Button.-error, Button.error {
+    background: $primary;
+    color: $text;
+    border: round $primary;
+}
+
+Button.-error:hover, Button.error:hover {
+    background: $secondary;
+}
+
+Button:disabled {
+    background: $background;
+    color: $text-disabled;
+    border: round $primary;
+    opacity: 0.5;
+}
+
+/* ===== STATUS BARS ===== */
+
+.status-bar {
+    background: $background;
+    color: $text;
+    height: 1;
+    padding: 0 2;
+    dock: bottom;
+    border-top: solid $primary;
+}
+
+.status-bar Static {
+    color: $text;
+}
+
+/* ===== HEADER BAR ===== */
+
+.header {
+    background: $background;
+    color: $text;
+    height: 3;
+    padding: 1 2;
+    dock: top;
+    border-bottom: solid $primary;
+}
+
+.header-title {
+    color: $text;
+    text-style: bold;
+}
+
+.header-subtitle {
+    color: $accent;
+}
+
+/* ===== FOOTER BAR ===== */
+
+.footer-bar {
+    background: $background;
+    height: 1;
+    padding: 0 1;
+    dock: bottom;
+    border-top: solid $primary;
+}
+
+.footer-item {
+    color: $text;
+    margin-right: 3;
+}
+
+.footer-key {
+    color: $secondary;
+    text-style: bold;
+}
+
+.footer-desc {
+    color: $text;
+}
+
+/* ===== TEXT STYLING CLASSES ===== */
+
+.highlight {
+    color: $accent;
+}
+
+.warning {
+    color: $secondary;
+}
+
+.error {
+    color: $accent;
+}
+
+.muted {
+    color: $primary;
+}
+
+.accent {
+    color: $secondary;
+}
+
+.primary {
+    color: $secondary;
+}
+
+.cyan {
+    color: $secondary;
+}
+
+.orange {
+    color: $secondary;
+}
+
+/* ===== LABEL STYLING ===== */
+
+Label {
+    padding: 0;
+    margin: 0;
+    color: $text;
+}
+
+.label-title {
+    color: $text;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+.label-section {
+    color: $accent;
+    text-style: bold;
+    margin-top: 1;
+}
+
+/* ===== RADIOBUTTON & RADIOSET (removed - using nerd font icons) ===== */
+
+/* ===== CHECKBOX (removed - using nerd font icons) ===== */
+
+/* ===== SELECTIONLIST ===== */
+
+SelectionList {
+    background: $background;
+    border: round $primary;
+    padding: 0;
+}
+
+SelectionList:focus {
+    border: round $accent;
+}
+
+SelectionList > .selection-list--option {
+    padding: 0 1;
+    color: $text;
+}
+
+SelectionList > .selection-list--option-highlighted {
+    background: $accent;
+    color: $background;
+}
+
+/* ===== DATATABLE ===== */
+
+DataTable {
+    background: $background;
+    color: $text;
+    border: round $primary;
+}
+
+DataTable:focus {
+    border: round $accent;
+}
+
+DataTable > .datatable--header {
+    background: $background;
+    color: $accent;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $accent;
+    color: $background;
+}
+
+DataTable > .datatable--hover {
+    background: $primary;
+}
+
+/* ===== PROGRESSBAR ===== */
+
+ProgressBar {
+    padding: 0 1;
+}
+
+ProgressBar > .bar--bar {
+    color: $primary;
+    background: $background;
+}
+
+ProgressBar > .bar--complete {
+    color: $success;
+}
+
+/* ===== SCROLLBAR ===== */
+
+Scrollbar {
+    background: $background;
+}
+
+Scrollbar:hover {
+    background: $background;
+}
+
+ScrollBar > .scrollbar--handle {
+    background: $primary;
+}
+
+ScrollBar > .scrollbar--handle:hover {
+    background: $accent;
+}
+
+/* ===== LAYOUT ===== */
+
+Horizontal {
+    height: auto;
+}
+
+Vertical {
+    width: auto;
+}
+
+VerticalScroll {
+    scrollbar-background: $background;
+    scrollbar-color: $primary;
+    scrollbar-color-hover: $accent;
+    scrollbar-color-active: $accent;
+}
+
+/* ===== MAIN MENU STYLES ===== */
+
+#main-menu-container {
+    align: center middle;
+    width: 100%;
+    height: 100%;
+}
+
+#logo-container {
+    align: center middle;
+    width: 100%;
+    height: auto;
+}
+
+#logo {
+    text-align: center;
+    padding: 1;
+    width: 100%;
+}
+
+#menu-box {
+    background: $background;
+    border: round $primary;
+    padding: 2 4;
+    margin: 1 0;
+    width: 50;
+    height: auto;
+    align-horizontal: center;
+}
+
+#menu-box:focus-within {
+    border: round $accent;
+}
+
+.menu-button {
+    width: 100%;
+    margin: 1 0;
+    padding: 1 2;
+    min-width: 40;
+    text-align: center;
+}
+
+.menu-button:focus {
+    background: $accent;
+    color: $background;
+}
+
+#version-info {
+    color: $text-muted;
+    text-align: center;
+    margin-top: 1;
+    width: 100%;
+}
+
+#help-text {
+    text-align: center;
+    width: 100%;
+}
+
+#system-info {
+    background: $background;
+    color: $text;
+    height: 1;
+    padding: 0 2;
+    dock: bottom;
+    border-top: solid $primary;
+}
+
+/* ===== TRAINING SCREEN STYLES ===== */
+
+#training-header {
+    height: 3;
+    background: $background;
+    border-bottom: solid $primary;
+    padding: 1 2;
+}
+
+#training-header-title {
+    color: $text;
+    text-style: bold;
+}
+
+#training-header-nav {
+    color: $text;
+    dock: right;
+}
+
+#main-content {
+    layout: horizontal;
+    height: 1fr;
+    padding: 1;
+}
+
+#dataset-panel {
+    width: 1fr;
+    background: $background;
+    border: round $primary;
+    border-title-color: $text;
+    border-title-style: bold;
+    border-title-align: center;
+    margin-right: 1;
+}
+
+#dataset-panel:focus-within {
+    border: round $accent;
+}
+
+#config-panel {
+    width: 2fr;
+    background: $background;
+    border: round $primary;
+    border-title-color: $text;
+    border-title-style: bold;
+    border-title-align: center;
+    margin-right: 1;
+}
+
+#config-panel:focus-within {
+    border: round $accent;
+}
+
+#preview-panel {
+    width: 1fr;
+    background: $background;
+    border: round $primary;
+    border-title-color: $text;
+    border-title-style: bold;
+    border-title-align: center;
+}
+
+#preview-panel:focus-within {
+    border: round $accent;
+}
+
+/* ===== DATASET PANEL INTERNAL ===== */
+
+DatasetPanel {
+    width: 100%;
+    height: 100%;
+    padding: 1;
+}
+
+DatasetPanel .data-stats {
+    margin-top: 1;
+    margin-bottom: 1;
+}
+
+DatasetPanel .stat-label {
+    color: $text;
+}
+
+DatasetPanel .stat-value {
+    color: $accent;
+}
+
+DatasetPanel .preset-option {
+    width: 100%;
+    height: 1;
+    min-height: 1;
+    max-height: 1;
+    margin: 0;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+DatasetPanel .preset-option:hover {
+    background: $primary;
+    color: $accent;
+}
+
+DatasetPanel .preset-option:focus {
+    background: $primary;
+    color: $accent;
+}
+
+DatasetPanel .source-option {
+    width: 100%;
+    height: 1;
+    min-height: 1;
+    max-height: 1;
+    margin: 0;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+DatasetPanel .source-option:hover {
+    background: $primary;
+    color: $accent;
+}
+
+DatasetPanel .source-option:focus {
+    background: $primary;
+    color: $accent;
+}
+
+DatasetPanel #data-source-buttons {
+    width: 100%;
+    height: auto;
+}
+
+DatasetPanel #presets-container {
+    margin-top: 1;
+}
+
+/* ===== CONFIG PANEL INTERNAL ===== */
+
+ConfigPanel {
+    width: 100%;
+    height: 100%;
+}
+
+ConfigPanel VerticalScroll {
+    padding: 1;
+    padding-bottom: 3;
+}
+
+ConfigPanel .config-row {
+    height: 3;
+    margin-bottom: 0;
+}
+
+ConfigPanel .config-label {
+    width: 18;
+    color: $text;
+    padding-top: 1;
+}
+
+ConfigPanel .config-input {
+    width: 12;
+}
+
+ConfigPanel Input {
+    height: 3;
+}
+
+ConfigPanel .config-toggle {
+    width: 100%;
+    height: 1;
+    min-height: 1;
+    max-height: 1;
+    margin: 0;
+    margin-top: 1;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 0 1;
+    content-align: left middle;
+}
+
+ConfigPanel .config-toggle:hover {
+    background: $primary;
+    color: $accent;
+}
+
+ConfigPanel .config-toggle:focus {
+    background: $primary;
+    color: $accent;
+}
+
+/* ===== PREVIEW PANEL INTERNAL ===== */
+
+PreviewPanel {
+    width: 100%;
+    height: 100%;
+    padding: 1;
+}
+
+PreviewPanel #command-text {
+    color: $text;
+    background: $background;
+    padding: 1;
+    border: none;
+    height: auto;
+    min-height: 10;
+}
+
+PreviewPanel .estimate-section {
+    margin-top: 1;
+    padding: 1 0;
+    border: none;
+    background: transparent;
+    height: auto;
+}
+
+PreviewPanel .estimate-label {
+    color: $text;
+}
+
+PreviewPanel .estimate-value {
+    color: $secondary;
+}
+
+PreviewPanel .validation-section {
+    margin-top: 1;
+    padding: 1 0;
+    border: none;
+    background: transparent;
+    height: auto;
+}
+
+PreviewPanel VerticalScroll {
+    height: 100%;
+}
+
+/* ===== STATUS BAR WIDGET ===== */
+
+StatusBar {
+    dock: bottom;
+    height: 1;
+    background: $background;
+    padding: 0 2;
+    border-top: solid $primary;
+}
+
+StatusBar Horizontal {
+    width: 100%;
+    height: 100%;
+    align: left middle;
+}
+
+StatusBar Static {
+    color: $text;
+    padding: 0 2;
+}
+
+StatusBar .status-key {
+    color: $secondary;
+}
+
+StatusBar .status-value {
+    color: $accent;
+}
+
+StatusBar .status-warning {
+    color: $secondary;
+}
+
+StatusBar .status-error {
+    color: $accent;
+}
+
+/* ===== TRAINING OUTPUT ===== */
+
+#training-output {
+    display: none;
+    height: 100%;
+    background: $background;
+    border: round $primary;
+}
+
+#training-output.visible {
+    display: block;
+}
+
+#training-controls {
+    display: none;
+    height: 3;
+    background: $background;
+    padding: 0 2;
+    border-top: solid $primary;
+}
+
+#training-controls.visible {
+    display: block;
+}
+
+/* ===== FOOTER KEYBINDING BAR ===== */
+
+#footer-bar {
+    dock: bottom;
+    height: 1;
+    background: $background;
+    padding: 0 2;
+    border-top: solid $primary;
+}
+
+/* ===== RULE (DIVIDER) ===== */
+
+Rule {
+    color: $primary;
+    margin: 1 0;
+}
+
+Rule.-horizontal {
+    height: 1;
+    border-top: solid $primary;
+    margin: 1 0;
+}
+
+/* ===== TOAST NOTIFICATIONS ===== */
+
+Toast {
+    background: $background;
+    border: round $primary;
+    color: $text;
+}
+
+Toast.-information {
+    border: round $primary;
+    background: $background;
+}
+
+Toast.-success {
+    border: round $success;
+    background: $background;
+}
+
+Toast.-warning {
+    border: round $warning;
+    background: $background;
+}
+
+Toast.-error {
+    border: round $error;
+    background: $background;
+}
+
+/* ===== STATIC TEXT ===== */
+
+Static {
+    background: transparent;
+}
+
+/* ===== RICHLOG ===== */
+
+RichLog {
+    background: $background;
+    color: $text;
+    border: round $primary;
+    padding: 1;
+}
+
+RichLog:focus {
+    border: round $accent;
+}
+
+/* ===== TABS ===== */
+
+TabbedContent {
+    background: transparent;
+}
+
+Tabs {
+    background: $background;
+    border-bottom: solid $primary;
+}
+
+Tab {
+    color: $text;
+    padding: 0 3;
+    background: transparent;
+}
+
+Tab:hover {
+    color: $accent;
+    background: $background;
+}
+
+Tab.-active {
+    color: $accent;
+    text-style: bold;
+    background: $background;
+    border-bottom: solid $accent;
+}
+
+Tab:focus {
+    color: $accent;
+    text-style: bold;
+}
+
+ContentSwitcher {
+    background: $background;
+}
+
+TabPane {
+    background: $background;
+    padding: 1;
+}
+
+/* ===== LOADING INDICATOR ===== */
+
+LoadingIndicator {
+    color: $accent;
+}
+
+/* ===== COLLAPSIBLE ===== */
+
+Collapsible {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+CollapsibleTitle {
+    color: $text;
+    text-style: bold;
+    padding: 0 1;
+    background: transparent;
+}
+
+CollapsibleTitle:hover {
+    color: $accent;
+    background: $background;
+}
+
+CollapsibleTitle:focus {
+    color: $accent;
+}
+
+/* ===== LISTVIEW ===== */
+
+ListView {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+ListView > ListItem {
+    padding: 0 1;
+    color: $text;
+}
+
+ListView > ListItem:hover {
+    background: $background;
+}
+
+ListView > ListItem.--highlight {
+    background: $accent;
+    color: $background;
+}
+
+/* ===== OPTIONLIST ===== */
+
+OptionList {
+    background: $background;
+    border: round $primary;
+    padding: 0;
+}
+
+OptionList:focus {
+    border: round $accent;
+}
+
+OptionList > .option-list--option {
+    padding: 0 2;
+    color: $text;
+}
+
+OptionList > .option-list--option-hover {
+    background: $primary;
+}
+
+OptionList > .option-list--option-highlighted {
+    background: $accent;
+    color: $background;
+}
+
+/* ===== TREE ===== */
+
+Tree {
+    background: $background;
+    border: round $primary;
+}
+
+Tree:focus {
+    border: round $accent;
+}
+
+Tree > .tree--cursor {
+    background: $accent;
+    color: $background;
+}
+
+Tree > .tree--guides {
+    color: $primary;
+}
+
+Tree > .tree--guides-hover {
+    color: $accent;
+}
+
+/* ===== MARKDOWN ===== */
+
+MarkdownH1 {
+    color: $text;
+    text-style: bold;
+    border-bottom: solid $primary;
+    padding-bottom: 1;
+    margin-bottom: 1;
+}
+
+MarkdownH2 {
+    color: $accent;
+    text-style: bold;
+    margin-top: 1;
+}
+
+MarkdownH3 {
+    color: $primary;
+    text-style: bold;
+}
+
+Markdown {
+    background: transparent;
+}
+
+MarkdownFence {
+    background: $surface;
+    border: round $primary;
+    color: $text;
+    padding: 1;
+}
+
+/* ===== PLACEHOLDER ===== */
+
+Placeholder {
+    background: $background;
+    border: round $primary;
+    color: $primary;
+}
+
+/* ===== SWITCH ===== */
+
+Switch {
+    background: $primary;
+    border: round $primary;
+}
+
+Switch:hover {
+    background: $accent;
+}
+
+Switch.-on {
+    background: $success;
+}
+
+Switch.-on > .switch--slider {
+    color: $background;
+}
+
+/* ===== SPARKLINE ===== */
+
+Sparkline {
+    background: transparent;
+}
+
+Sparkline > .sparkline--min-color {
+    color: $primary;
+}
+
+Sparkline > .sparkline--max-color {
+    color: $accent;
+}
+
+/* ===== LOG ===== */
+
+Log {
+    background: $background;
+    border: round $primary;
+    color: $text;
+    padding: 0 1;
+}
+
+Log:focus {
+    border: round $accent;
+}
+
+/* ===== FOOTER ===== */
+
+Footer {
+    background: $background;
+    color: $text;
+}
+
+Footer > .footer--highlight {
+    background: $primary;
+}
+
+Footer > .footer--highlight-key {
+    background: $accent;
+    color: $background;
+}
+
+Footer > .footer--key {
+    background: $primary;
+    color: $text;
+}
+
+Footer > .footer--description {
+    color: $text;
+}
