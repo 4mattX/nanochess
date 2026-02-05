@@ -51,13 +51,40 @@ python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_
 
 ### 1. Data Preparation
 
-PRA requires position/move pairs in parquet format:
+PRA requires position/move pairs in parquet format.
+
+**Quick Start - Automated Fetching:**
+
+The fastest way to get high-quality data:
+
+```bash
+# Interactive menu with presets
+bash dev/quick_fetch.sh
+
+# Or fetch directly from elite players
+python dev/fetch_chess_data.py \
+    --source lichess-elite \
+    --max-games 10000 \
+    --time-control classical
+```
+
+This automatically:
+- Downloads games from 2500+ rated players
+- Includes Stockfish evaluations
+- Converts to parquet format
+- Saves to `~/.cache/nanochat/pra_data`
+
+See [DATA_FETCHING.md](DATA_FETCHING.md) for detailed guide.
+
+**Manual Conversion:**
+
+If you have your own PGN files:
 
 ```bash
 # Convert PGN to parquet
 python dev/prepare_chess_positions.py \
     --input games.pgn \
-    --output-dir ~/.cache/nanochess/pra_data \
+    --output-dir ~/.cache/nanochat/pra_data \
     --with-eval  # Extract engine evaluations if present
 ```
 
@@ -70,19 +97,9 @@ python dev/prepare_chess_positions.py \
 
 **Data sources:**
 - [Lichess Database](https://database.lichess.org/) - games with engine evals
+- [Lichess API](https://lichess.org/api) - elite player games
 - FICS databases
 - chess.com exports
-
-Example with Lichess data:
-```bash
-# Download from https://database.lichess.org/
-python dev/prepare_chess_positions.py \
-    --input lichess_db_standard_rated_2024-01.pgn.zst \
-    --output-dir ~/.cache/nanochess/pra_data \
-    --with-eval \
-    --max-positions 1000000 \
-    --sample-rate 0.1
-```
 
 ### 2. Training
 
@@ -134,6 +151,37 @@ python -m scripts.pra_eval \
 - Top-1 / Top-5 move accuracy
 - Value MAE (mean absolute error vs engine eval)
 - Per-piece-type accuracy breakdown
+
+### 5. Interactive Play
+
+Watch your trained model play chess in real-time with the TUI:
+
+```bash
+# Launch the interactive TUI
+python -m nanochess
+
+# Navigate to Interactive mode (press 'I')
+```
+
+**Features:**
+- Visual chess board with Unicode pieces
+- **Multiple game modes:**
+  - **Self-play**: Model plays against itself
+  - **vs Stockfish**: Stockfish (white) plays against model (black) at full strength
+- Real-time move history with move classification
+- **PGN Export**: One-click copy to clipboard in PGN format
+- Model evaluation display
+- Optional Stockfish analysis (move-by-move evaluation)
+- Play/Pause/Reset controls
+
+**Stockfish Opponent:**
+When playing against Stockfish:
+- **Random first move**: Creates opening variety to test adaptability
+- **Depth 20 search**: Full strength for subsequent moves
+- **Grandmaster-level play**: ~3000+ Elo
+- Provides varied, maximum-strength benchmark for model evaluation
+
+See [TUI.md](TUI.md) for detailed usage guide.
 
 ### Loss Function
 

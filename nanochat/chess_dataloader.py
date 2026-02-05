@@ -4,14 +4,18 @@ Distributed dataloaders for chess position/move pairs.
 Loads parquet files with columns:
 - fen: FEN string of the position
 - best_move: UCI move string (e.g., "e2e4")
-- eval: Engine evaluation in centipawns (optional)
+- eval: Position evaluation in centipawns OR game outcome
+  - Position eval: -500 to +500 typical range
+  - Game outcome: ±10000 for win/loss, 0 for draw
 
 Yields batches of:
 - board: (B, 64) tensor of piece indices
 - side_to_move: (B,) tensor of 0 (black) or 1 (white)
 - from_square: (B,) tensor of source square indices
 - to_square: (B,) tensor of destination square indices
-- value: (B,) tensor of normalized evaluations in [-1, 1]
+- value: (B,) tensor of normalized values in [-1, 1]
+  - Game outcomes: exactly -1.0 (loss), 0.0 (draw), +1.0 (win)
+  - Position evals: smoothly scaled to [-1, 1] range
 """
 
 import torch
@@ -36,16 +40,23 @@ def list_chess_parquet_files():
 def normalize_eval(centipawns: int, cap: float = 1000.0) -> float:
     """Normalize centipawn evaluation to [-1, 1] range.
 
-    Uses tanh-like scaling where ±1000cp maps to approximately ±0.76.
+    Handles both:
+    - Position evaluations: Uses tanh-like scaling where ±1000cp → ±0.76
+    - Game outcomes: ±10000cp (win/loss) maps to exactly ±1.0, 0cp (draw) to 0.0
 
     Args:
         centipawns: Evaluation in centipawns (positive = white advantage)
-        cap: Soft cap value for scaling
+                   Or ±10000 for game outcome (win/loss)
+        cap: Soft cap value for scaling (only used for position evals)
 
     Returns:
         Normalized evaluation in [-1, 1]
     """
-    # Tanh-style scaling: eval / (|eval| + cap)
+    # Game outcomes: map ±10000 to exactly ±1.0
+    if abs(centipawns) >= 9000:  # Threshold to detect game outcomes
+        return 1.0 if centipawns > 0 else (-1.0 if centipawns < 0 else 0.0)
+
+    # Position evaluations: tanh-style scaling
     # This gives smooth scaling where large evals asymptote to ±1
     return centipawns / (abs(centipawns) + cap)
 

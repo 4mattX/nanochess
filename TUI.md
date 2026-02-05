@@ -111,7 +111,7 @@ Screens are full-terminal views managed via a stack. Navigation uses `push_scree
 | `MainMenuScreen` | Home menu with Train/Evaluate/Interactive/Quit | T, E, I, Q |
 | `TrainingScreen` | Training configuration and launch | F1 (help), F5 (preset), F10 (start), ESC (back) |
 | `EvaluationScreen` | Model evaluation (placeholder) | ESC |
-| `InteractiveScreen` | Interactive play (placeholder) | ESC |
+| `InteractiveScreen` | Watch model self-play with optional Stockfish evaluation | Space (play/pause), R (reset), ESC (back) |
 
 Each screen extends `textual.screen.Screen` and implements:
 - `compose()` - yields child widgets
@@ -375,10 +375,153 @@ asyncio.run(test())
 
 ---
 
+---
+
+## Interactive Play Screen
+
+The `InteractiveScreen` allows you to watch your trained PRA model play chess against itself or against Stockfish in real-time.
+
+### Features
+
+1. **Visual Chess Board**: ASCII art board with Unicode chess pieces
+2. **Multiple Game Modes**:
+   - **Self-Play**: Watch the model play against itself
+   - **vs Stockfish**: Stockfish (white) plays against model (black) at full strength
+3. **Move History**: Scrollable panel showing all moves in algebraic notation
+4. **PGN Export**: One-click button to copy the game in PGN format to clipboard
+5. **Model Evaluation**: Real-time position evaluation from the model's value head
+6. **Stockfish Integration** (optional):
+   - Play against Stockfish as an opponent
+   - Compare model evaluation with Stockfish
+   - Move-by-move analysis and classification
+7. **Playback Controls**: Start, pause, reset, and adjust game speed
+
+### Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Left Panel                    │ Right Panel                     │
+│                               │                                 │
+│  ┌─────────────────┐         │  MOVE HISTORY                   │
+│  │  8 │ ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜ │   │  1. e4                          │
+│  │  7 │ ♟ ♟ ♟ ♟ ♟ ♟ ♟ ♟ │   │  1... e5                        │
+│  │  6 │ · · · · · · · · │   │  2. Nf3                         │
+│  │  5 │ · · · · · · · · │   │  2... Nc6                       │
+│  │  4 │ · · · · · · · · │   │  3. Bc4                         │
+│  │  3 │ · · · · · · · · │   │  ...                            │
+│  │  2 │ ♙ ♙ ♙ ♙ ♙ ♙ ♙ ♙ │   │                                 │
+│  │  1 │ ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖ │   │                                 │
+│  └─────────────────────┘     │                                 │
+│                               │                                 │
+│  CONTROLS                     │                                 │
+│  Select model: [pra_d2]       │                                 │
+│  [Load] [Start] [Pause] [Reset]                                │
+│  □ Use Stockfish evaluation   │                                 │
+│                               │                                 │
+│  STATISTICS                   │                                 │
+│  Move: 6                      │                                 │
+│  Model eval: +0.23            │                                 │
+│  Stockfish: N/A               │                                 │
+│  Status: Playing...           │                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Usage
+
+1. Launch the TUI: `python -m nanochess` or `nanochess`
+2. Press `I` to enter Interactive mode
+3. Select a model checkpoint from the dropdown
+4. Click "Load Model" to load the checkpoint
+5. Choose opponent mode:
+   - **Self-play**: Model plays against itself (both sides)
+   - **Stockfish**: Stockfish plays white, model plays black (Stockfish's first move is random)
+6. (Optional) Enable "Move analysis" for real-time Stockfish evaluation and move classification
+7. Click "Start" or press Space to begin playing
+8. Watch the game! The board updates in real-time
+9. Use "Pause" or Space to pause, "Reset" or R to start a new game
+10. Click "Copy PGN" to copy the current game in PGN format to your clipboard
+
+### Key Bindings
+
+- **Space**: Toggle play/pause
+- **R**: Reset game
+- **ESC**: Return to main menu
+
+### Stockfish Integration
+
+If you have Stockfish installed, you can use it in two ways:
+
+```bash
+# Install Stockfish (Ubuntu/Debian)
+sudo apt-get install stockfish
+
+# Install Stockfish (macOS)
+brew install stockfish
+
+# Install Stockfish (Windows)
+# Download from https://stockfishchess.org/download/
+```
+
+**1. As an Opponent (vs Stockfish mode)**:
+- Stockfish plays white, model plays black
+- **First move is random**: Creates opening variety to test model adaptability
+- **Subsequent moves at full strength**: Depth 20 search (~3000+ Elo)
+- Perfect for benchmarking model strength against a known strong baseline
+
+**2. For Move Analysis (when enabled)**:
+- Real-time evaluation of every position
+- Move classification (Best ✓, Good •, Inaccuracy ?!, Mistake ?, Blunder ??)
+- Centipawn loss tracking
+- Game accuracy calculation and Elo estimation
+
+When analysis is enabled, the statistics panel shows:
+- **Model eval**: The model's value head prediction (-1 to +1)
+- **Stockfish eval**: Engine evaluation in pawns (positive = white advantage)
+- **Game Accuracy**: Overall move quality percentage
+- **Est. Rating**: Approximate Elo based on move accuracy
+
+This comparison helps estimate your model's playing strength and identify where it diverges from optimal play.
+
+### Implementation Details
+
+**Model Inference**:
+- Converts board position to FEN
+- Parses FEN to board tensor using `fen_to_position()`
+- Runs model forward pass to get move logits and value
+- Filters to legal moves only
+- Selects move with highest logit
+
+**Stockfish as Opponent**:
+- **Random Opening**: First move is randomly selected from all legal moves
+- **Full Strength After**: Searches to depth 20 for moves 2+
+- **Opening Variety**: Different games test model's adaptability to various positions
+- **Grandmaster Level**: ~3000+ Elo rating (after opening)
+- Provides varied, maximum-strength benchmark for evaluating model performance
+
+**Stockfish Evaluation**:
+- Runs in subprocess via UCI protocol
+- Depth 15 search for analysis (configurable)
+- Converts centipawn evaluation to pawns
+- Non-blocking to avoid freezing the UI
+
+**Performance**:
+- CPU inference: ~50-100ms per move
+- GPU inference: ~10-20ms per move
+- Stockfish depth 20: ~500-2000ms per move
+- Stockfish analysis depth 15: ~100-500ms per position
+- Default game speed: 1 second between moves (adjustable)
+
+---
+
 ## Future Work
 
 - **EvaluationScreen**: Load checkpoints, run evaluation, display metrics
-- **InteractiveScreen**: Play against the model, visualize board state
+- **Speed Control**: Slider to adjust game speed dynamically
+- **Move Analysis**: Click on moves to jump to that position
+- **Additional Opponents**: Play against random moves or load another model
+- **Stockfish Settings**: UI controls to adjust search depth
+- **Color Selection**: UI option to choose which color plays when against Stockfish
+- **PGN Save to File**: Save games directly to .pgn files
 - **PGN Processing**: Integrate `prepare_chess_positions.py` into the TUI
 - **Training Progress**: Parse training output for live loss/accuracy plots
 - **Checkpoint Browser**: List and manage saved checkpoints

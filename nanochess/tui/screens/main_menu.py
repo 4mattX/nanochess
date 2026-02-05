@@ -78,7 +78,7 @@ class MainMenuScreen(Screen):
                     Container(
                         MenuButton(f"{TRAINING}  Train Model", "T", id="btn-train"),
                         MenuButton(f"{METRICS}  Evaluate Model", "E", id="btn-evaluate", disabled=True),
-                        MenuButton(f"{PLAY}  Interactive Play", "I", id="btn-interactive", disabled=True),
+                        MenuButton(f"{PLAY}  Interactive Play", "I", id="btn-interactive"),
                         MenuButton("  Quit", "Q", id="btn-quit"),
                         Static("[$primary]v0.1.0[/]", id="version-info"),
                         id="menu-box",
@@ -163,12 +163,9 @@ class MainMenuScreen(Screen):
         )
 
     def action_interactive(self) -> None:
-        """Switch to the interactive play screen (not implemented yet)."""
-        self.app.notify(
-            "[$warning]Interactive play coming soon![/]",
-            title="Not Implemented",
-            severity="warning",
-        )
+        """Switch to the interactive play screen."""
+        from nanochess.tui.screens.interactive import InteractiveScreen
+        self.app.push_screen(InteractiveScreen())
 
     def action_quit(self) -> None:
         """Quit the application."""

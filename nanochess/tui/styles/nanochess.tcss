@@ -685,44 +685,38 @@ ConfigPanel .config-toggle:focus {
 PreviewPanel {
     width: 100%;
     height: 100%;
-    padding: 1;
+    overflow-y: auto;
 }
 
-PreviewPanel #command-text {
+PreviewPanel > * {
+    padding: 0 1;
+}
+
+PreviewPanel .section-title {
+    margin-top: 1;
+    margin-bottom: 0;
+}
+
+PreviewPanel .section-title:first-child {
+    margin-top: 1;
+}
+
+PreviewPanel .command-preview {
     color: $text;
     background: $background;
     padding: 1;
-    border: none;
-    height: auto;
-    min-height: 10;
-}
-
-PreviewPanel .estimate-section {
-    margin-top: 1;
-    padding: 1 0;
-    border: none;
-    background: transparent;
+    margin-bottom: 1;
+    border: round $primary;
     height: auto;
 }
 
-PreviewPanel .estimate-label {
-    color: $text;
-}
-
-PreviewPanel .estimate-value {
-    color: $secondary;
-}
-
-PreviewPanel .validation-section {
-    margin-top: 1;
-    padding: 1 0;
-    border: none;
-    background: transparent;
+PreviewPanel #time-estimate,
+PreviewPanel #cost-estimate,
+PreviewPanel #throughput-estimate,
+PreviewPanel #validation-status {
     height: auto;
-}
-
-PreviewPanel VerticalScroll {
-    height: 100%;
+    padding: 0 1;
+    margin-bottom: 0;
 }
 
 /* ===== STATUS BAR WIDGET ===== */

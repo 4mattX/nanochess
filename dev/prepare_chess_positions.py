@@ -4,17 +4,21 @@ Prepare chess positions for PRA (Piece-Routed Attention) training.
 Converts chess games to position/move pairs in parquet format:
 - fen: FEN string of the position
 - best_move: UCI move string (e.g., "e2e4")
-- eval: Engine evaluation in centipawns (optional)
+- eval: Position evaluation in centipawns OR game outcome (±10000 for win/loss, 0 for draw)
 
 Input sources:
 - PGN files with or without engine annotations
 - Lichess database exports (with eval comments)
 
 Usage:
-    python dev/prepare_chess_positions.py --input games.pgn --output-dir ~/.cache/nanochess/pra_data
+    # Use game outcomes as value targets (recommended)
+    python dev/prepare_chess_positions.py --input games.pgn --use-game-outcome --output-dir ~/.cache/nanochess/pra_data
 
-For Lichess database with evaluations:
+    # Extract position-specific evaluations from annotated games
     python dev/prepare_chess_positions.py --input lichess_db.pgn --with-eval --output-dir ~/.cache/nanochess/pra_data
+
+    # Use both: position evals when available, game outcomes as fallback
+    python dev/prepare_chess_positions.py --input games.pgn --with-eval --use-game-outcome --output-dir ~/.cache/nanochess/pra_data
 """
 
 import argparse
@@ -32,6 +36,50 @@ class Position:
     fen: str
     best_move: str  # UCI format
     eval_cp: Optional[int] = None  # centipawns, None if not available
+
+
+def extract_result_from_headers(headers: list[str]) -> Optional[str]:
+    """Extract game result from PGN headers.
+
+    Args:
+        headers: List of PGN header lines
+
+    Returns:
+        Result string: "1-0", "0-1", "1/2-1/2", or None
+    """
+    for header in headers:
+        if header.startswith('[Result'):
+            match = re.search(r'\[Result\s+"([^"]+)"\]', header)
+            if match:
+                return match.group(1)
+    return None
+
+
+def game_result_to_value(result: str, white_to_move: bool) -> Optional[int]:
+    """Convert game result to centipawn value from current player's perspective.
+
+    Args:
+        result: Game result ("1-0", "0-1", "1/2-1/2", "*")
+        white_to_move: Whether it's white's turn in this position
+
+    Returns:
+        Value in centipawns: +10000 for win, -10000 for loss, 0 for draw, None for unknown
+    """
+    if result == "*":
+        return None  # Unknown outcome
+
+    # Determine outcome from white's perspective
+    if result == "1-0":
+        white_value = 10000  # White wins
+    elif result == "0-1":
+        white_value = -10000  # Black wins
+    elif result == "1/2-1/2":
+        white_value = 0  # Draw
+    else:
+        return None
+
+    # Convert to current player's perspective
+    return white_value if white_to_move else -white_value
 
 
 def parse_pgn_games(pgn_path: str) -> Iterator[tuple[list[str], list[str]]]:
@@ -128,6 +176,7 @@ def extract_eval_from_comment(comment: str) -> Optional[int]:
 
 def extract_positions_from_game(headers: list[str], tokens: list[str],
                                 with_eval: bool = False,
+                                use_game_outcome: bool = False,
                                 min_ply: int = 10,
                                 max_ply: int = 200) -> Iterator[Position]:
     """Extract positions from a parsed game.
@@ -136,6 +185,7 @@ def extract_positions_from_game(headers: list[str], tokens: list[str],
         headers: PGN headers
         tokens: Move/comment tokens
         with_eval: Whether to extract evaluations from comments
+        use_game_outcome: Whether to use game outcome as eval (win=+1, draw=0, loss=-1)
         min_ply: Minimum ply (half-move) to start extracting
         max_ply: Maximum ply to extract
 
@@ -146,6 +196,9 @@ def extract_positions_from_game(headers: list[str], tokens: list[str],
         import chess
     except ImportError:
         raise ImportError("python-chess required: pip install chess")
+
+    # Extract game result for outcome-based evaluation
+    game_result = extract_result_from_headers(headers) if use_game_outcome else None
 
     board = chess.Board()
     ply = 0
@@ -172,7 +225,13 @@ def extract_positions_from_game(headers: list[str], tokens: list[str],
         # Extract position if within ply range
         if min_ply <= ply <= max_ply:
             fen = board.fen()
-            yield Position(fen=fen, best_move=uci, eval_cp=pending_eval)
+
+            # Determine evaluation: prefer position-specific eval, fallback to game outcome
+            eval_cp = pending_eval
+            if eval_cp is None and game_result:
+                eval_cp = game_result_to_value(game_result, board.turn)
+
+            yield Position(fen=fen, best_move=uci, eval_cp=eval_cp)
 
         # Make the move
         try:
@@ -187,6 +246,7 @@ def extract_positions_from_game(headers: list[str], tokens: list[str],
 
 
 def process_pgn_file(pgn_path: str, with_eval: bool = False,
+                    use_game_outcome: bool = False,
                     min_ply: int = 10, max_ply: int = 200,
                     max_positions: int = -1,
                     sample_rate: float = 1.0) -> list[Position]:
@@ -194,7 +254,8 @@ def process_pgn_file(pgn_path: str, with_eval: bool = False,
 
     Args:
         pgn_path: Path to PGN file
-        with_eval: Whether to extract evaluations
+        with_eval: Whether to extract evaluations from comments
+        use_game_outcome: Whether to use game outcome as eval
         min_ply: Minimum ply to extract
         max_ply: Maximum ply to extract
         max_positions: Maximum positions to extract (-1 = unlimited)
@@ -209,7 +270,7 @@ def process_pgn_file(pgn_path: str, with_eval: bool = False,
     print(f"Processing {pgn_path}...")
 
     for headers, tokens in parse_pgn_games(pgn_path):
-        for pos in extract_positions_from_game(headers, tokens, with_eval, min_ply, max_ply):
+        for pos in extract_positions_from_game(headers, tokens, with_eval, use_game_outcome, min_ply, max_ply):
             # Random sampling
             if sample_rate < 1.0 and random.random() > sample_rate:
                 continue
@@ -261,10 +322,12 @@ def main():
     parser.add_argument("--input", "-i", type=str, required=True,
                        help="Input PGN file or directory of PGN files")
     parser.add_argument("--output-dir", "-o", type=str,
-                       default=os.path.expanduser("~/.cache/nanochess/pra_data"),
+                       default=os.path.expanduser("~/.cache/nanochat/pra_data"),
                        help="Output directory for parquet files")
     parser.add_argument("--with-eval", action="store_true",
                        help="Extract evaluations from comments (Lichess format)")
+    parser.add_argument("--use-game-outcome", action="store_true",
+                       help="Use game outcome (win/draw/loss) as evaluation signal")
     parser.add_argument("--min-ply", type=int, default=10,
                        help="Minimum ply to start extracting (default: 10)")
     parser.add_argument("--max-ply", type=int, default=200,
@@ -299,6 +362,7 @@ def main():
         positions = process_pgn_file(
             str(pgn_file),
             with_eval=args.with_eval,
+            use_game_outcome=args.use_game_outcome,
             min_ply=args.min_ply,
             max_ply=args.max_ply,
             max_positions=remaining,

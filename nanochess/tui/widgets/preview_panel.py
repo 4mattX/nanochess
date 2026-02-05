@@ -1,7 +1,6 @@
 """Command preview panel widget - Dracula theme."""
 
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalScroll
 from textual.widgets import Static
 from textual.widget import Widget
 
@@ -19,23 +18,16 @@ class PreviewPanel(Widget):
 
     def compose(self) -> ComposeResult:
         """Compose the preview panel."""
-        with VerticalScroll():
-            yield Static(f"[$accent]{PLAY}  COMMAND[/]", classes="section-title")
-            yield Static(self._get_command_text(), id="command-text")
+        yield Static(f"[$accent]{PLAY}  COMMAND[/]", classes="section-title")
+        yield Static(self._get_command_text(), id="command-text", classes="command-preview")
 
-            yield Vertical(
-                Static(f"[$accent]{CHART}  ESTIMATES[/]", classes="estimate-title"),
-                Static("", id="time-estimate"),
-                Static("", id="cost-estimate"),
-                Static("", id="throughput-estimate"),
-                classes="estimate-section",
-            )
+        yield Static(f"[$accent]{CHART}  ESTIMATES[/]", classes="section-title")
+        yield Static("", id="time-estimate")
+        yield Static("", id="cost-estimate")
+        yield Static("", id="throughput-estimate")
 
-            yield Vertical(
-                Static(f"[$accent]{SUCCESS}  VALIDATION[/]", classes="estimate-title"),
-                Static("", id="validation-status"),
-                classes="validation-section",
-            )
+        yield Static(f"[$accent]{SUCCESS}  VALIDATION[/]", classes="section-title")
+        yield Static("", id="validation-status")
 
     def on_mount(self) -> None:
         """Called when the widget is mounted."""
